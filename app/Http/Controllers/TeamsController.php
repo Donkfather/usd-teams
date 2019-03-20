@@ -14,7 +14,7 @@ class TeamsController extends Controller
      */
     public function index()
     {
-        return Team::all();
+        return Team::with('players')->get();
     }
 
     /**

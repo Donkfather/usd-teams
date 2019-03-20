@@ -1,5 +1,7 @@
 <?php
 
+use App\Player;
+use App\Team;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -11,6 +13,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // $this->call(UsersTableSeeder::class);
+        factory(\App\User::class)->create([
+            'name' => 'Demo user',
+            'email' => 'demo@usd.test',
+            'password' => bcrypt('secret')
+        ]);
+
+        $teams = factory(Team::class, 5)->create();
+        $teams->each(function ($team) {
+           factory(Player::class, rand(1,6))->create([
+               'team_id' => $team->id
+           ]);
+        });
     }
 }
