@@ -1,4 +1,4 @@
-#  startup
+#  setup
 
 `git clone git@github.com:Donkfather/usd-teams.git`
 
