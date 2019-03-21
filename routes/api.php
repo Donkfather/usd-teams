@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\TeamsController;
 use Illuminate\Http\Request;
 
 /*
@@ -14,11 +13,17 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::post('teams','TeamsController@store');
-Route::get('teams','TeamsController@index');
-Route::post('teams/{team}/players','TeamPlayersController@store');
-Route::post('players','PlayersController@store');
-Route::put('players/{player}','PlayersController@update');
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+Route::middleware('auth:api')->group(function () {
+    Route::post('teams', 'TeamsController@store');
+    Route::get('teams', 'TeamsController@index');
+    Route::post('teams/{team}/players', 'TeamPlayersController@store');
+
+    Route::post('players', 'PlayersController@store');
+    Route::delete('players/{player}', 'PlayersController@destroy');
+    Route::put('players/{player}', 'PlayersController@update');
+
 });

@@ -18,3 +18,6 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
+Route::middleware('auth')->get('/user', function () {
+    return response()->json(auth()->user()->makeVisible('api_token'), 200);
+});

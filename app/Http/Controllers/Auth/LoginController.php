@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\User;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Support\Str;
 
 class LoginController extends Controller
 {
@@ -35,5 +37,17 @@ class LoginController extends Controller
     public function __construct()
     {
         $this->middleware('guest')->except('logout');
+    }
+
+    public function authenticated($request, $user)
+    {
+        $api_key = null;
+        do{
+            $api_key = Str::random(60);
+        }while(User::where('api_token', $api_key)->exists());
+
+        $user->update(['api_token' => $api_key]);
+
+        return redirect()->intended($this->redirectPath());
     }
 }

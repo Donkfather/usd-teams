@@ -28,18 +28,34 @@
 
                     <div class="card-body">
                         <ul>
-                            <li v-for="player in team.players" :key="player.id" v-text="player.name"></li>
+                            <li v-for="player in team.players" :key="player.id">
+                                <div class="row">
+                                    <div class="col flex-1" v-text="player.name"></div>
+                                    <div class="col-2">
+                                        <button type="button" class="btn btn-link"
+                                                @click="showEditPlayerDialog(player,team)">
+                                            Edit
+                                        </button>
+                                    </div>
+                                    <div class="col-2">
+                                        <button type="button" class="btn btn-link" @click="deletePlayer(player,team)">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </li>
                         </ul>
                     </div>
                 </div>
             </div>
         </div>
-        <b-modal ref="playerForm" hide-footer :title="playerModal.title">
+        <b-modal ref="playerModalForm" hide-footer :title="playerModal.title">
             <form @submit.prevent="handlePlayerSubmit">
                 <div class="form-group">
                     <input type="text" class="form-control"
                            name="first_name"
                            id="first_name"
+                           v-model="playerModal.form.first_name"
                            placeholder="First name">
                 </div>
                 <div class="form-group">
@@ -47,6 +63,7 @@
                            class="form-control"
                            name="last_name"
                            id="last_name"
+                           v-model="playerModal.form.last_name"
                            placeholder="Last name">
                 </div>
                 <button type="submit" class="btn btn-primary">Add</button>
@@ -77,13 +94,25 @@
                         first_name: "",
                         last_name: "",
                         team: null,
+                        player: null,
                     },
                 },
-                teams: []
+                teams: [],
+                user: null
             };
         },
-        created() {
-            axios.get('/api/teams').then(response => {
+        async created() {
+            await axios.get('/user').then(({data}) => {
+                this.user = data;
+            });
+            if(this.user.api_token){
+                axios.interceptors.request.use((config) => {
+                    config.headers.authorization = `Bearer ${this.user.api_token}`;
+                    return config;
+                });
+            }
+
+            await axios.get('/api/teams').then(response => {
                 this.teams.push(...response.data)
             })
         },
@@ -91,10 +120,12 @@
             showAddPlayerDialog(team) {
                 this.playerModal.edit = false;
                 this.playerModal.form.team = team;
-                this.playerModal.show = true;
                 this.playerModal.title = `Add new player to team: <strong>${team.name}</strong>`;
+                this.playerModal.form.player = false;
+                this.playerModal.form.first_name = "";
+                this.playerModal.form.last_name = "";
 
-                this.$refs.playerForm.show();
+                this.$refs.playerModalForm.show();
             },
             createTeam() {
                 if (this.newTeamForm.name) {
@@ -103,7 +134,8 @@
                         name: this.newTeamForm.name
                     })
                         .then(response => {
-                            this.teams.unshift(response.data)
+                            let team = Object.assign(response.data, {players: []});
+                            this.teams.unshift(team)
                         })
                         .catch(err => {
                             if (err.response && err.response.status === 422) {
@@ -113,11 +145,49 @@
 
                 }
             },
-            addPlayer(team) {
-                axios.post(`/api/teams/${team.id}/players`, {})
+            addPlayer() {
+                let team = this.playerModal.form.team;
+                axios.post(`/api/teams/${team.id}/players`, {
+                    first_name: this.playerModal.form.first_name,
+                    last_name: this.playerModal.form.last_name,
+                    team_id: team.id
+                })
+                    .then(response => {
+                        team.players.push(response.data);
+                        this.$refs.playerModalForm.hide();
+                    })
             },
-            handlePlayerSubmit(){
+            showEditPlayerDialog(player, team) {
+                this.playerModal.edit = true;
+                this.playerModal.form.team = team;
+                this.playerModal.title = `Edit player`;
+                this.playerModal.form.player = player;
+                this.playerModal.form.first_name = player.first_name;
+                this.playerModal.form.last_name = player.last_name;
 
+                this.$refs.playerModalForm.show();
+            },
+            updatePlayer() {
+                let form = this.playerModal.form;
+                let player = form.player;
+                axios.put(`/api/players/${form.player.id}`, {
+                    first_name: form.first_name,
+                    last_name: form.last_name,
+                    team_id: form.team.id,
+                }).then(({data}) => {
+                    player = Object.assign(player, data);
+                    this.$refs.playerModalForm.hide();
+                })
+            },
+            deletePlayer(player, team) {
+                axios.delete(`/api/players/${player.id}`)
+                    .then(response => {
+                        team.players.splice(team.players.indexOf(player), 1)
+                        this.$refs.playerModalForm.hide();
+                    });
+            },
+            handlePlayerSubmit() {
+                return this.playerModal.edit ? this.updatePlayer() : this.addPlayer();
             }
         }
     }
