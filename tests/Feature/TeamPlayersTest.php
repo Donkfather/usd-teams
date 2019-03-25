@@ -15,6 +15,8 @@ class TeamPlayersTest extends TestCase
     /** @test */
     public function a_team_can_have_players()
     {
+        $this->signIn();
+
         $team = factory(Team::class)->create();
         $playerRaw = [
             'first_name' => $this->faker->firstName,
@@ -34,6 +36,7 @@ class TeamPlayersTest extends TestCase
     /** @test */
      public function a_player_requires_a_first_name()
      {
+         $this->signIn();
          $team = factory(Team::class)->create();
          $playerRaw = [
              'last_name' => $this->faker->lastName,
@@ -47,6 +50,7 @@ class TeamPlayersTest extends TestCase
     /** @test */
      public function a_player_requires_a_last_name()
      {
+         $this->signIn();
          $team = factory(Team::class)->create();
          $playerRaw = [
              'first_name' => $this->faker->firstName,

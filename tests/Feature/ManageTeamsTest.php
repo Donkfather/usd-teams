@@ -14,6 +14,8 @@ class ManageTeamsTest extends TestCase
     /** @test */
     public function create_team()
     {
+        $this->signIn();
+
         $this->postJson('/api/teams', [
             'name' => "Team name"
         ])
@@ -29,6 +31,7 @@ class ManageTeamsTest extends TestCase
     /** @test */
     public function a_team_requires_a_name()
     {
+        $this->signIn();
         $this->postJson('/api/teams', [])
             ->assertJsonValidationErrors('name');
 
@@ -40,6 +43,7 @@ class ManageTeamsTest extends TestCase
      {
         factory(Team::class, 10)->create();
 
+         $this->signIn();
         $this->getJson('/api/teams')
             ->assertStatus(200)
             ->assertJsonCount(10);

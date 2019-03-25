@@ -14,6 +14,7 @@ class ManagePlayersTest extends TestCase
     /** @test */
     public function player_requires_a_team()
     {
+        $this->signIn();
         $this->postJson('api/players', factory(Player::class)->raw([
             'team_id' => null
         ]))
@@ -26,6 +27,7 @@ class ManagePlayersTest extends TestCase
     /** @test */
     public function create_player()
     {
+        $this->signIn();
         $this->postJson('api/players', factory(Player::class)->raw())
             ->assertStatus(201);
 
@@ -35,7 +37,7 @@ class ManagePlayersTest extends TestCase
     /** @test */
     public function update_player()
     {
-        $this->withoutExceptionHandling();
+        $this->signIn();
         $player = factory(Player::class)->create();
         $team = factory(Team::class)->create();
         $this->putJson("api/players/{$player->id}", [
